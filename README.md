@@ -9,6 +9,17 @@ A Node.js web app to convert and merge images, PDFs, and Excel files into a sing
 - Merges all files into one downloadable PDF
 - Works locally and can be deployed to cloud platforms
 
+
+## Live Demo
+
+This app is deployed for free on Render:
+
+[https://image-to-pdf-converter-yjnq.onrender.com/](https://image-to-pdf-converter-yjnq.onrender.com/)
+
+You can use the drag-and-drop UI to convert and merge images, PDFs, and Excel files into a single PDF online.
+
+---
+
 ## How to Use Locally
 
 1. **Install dependencies:**
