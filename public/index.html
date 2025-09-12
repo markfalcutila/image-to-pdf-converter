@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image & PDF to PDF Converter</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; }
+    .container { max-width: 500px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+    h2 { text-align: center; margin-bottom: 24px; }
+    .dropzone {
+      border: 2px dashed #007bff;
+      border-radius: 8px;
+      background: #e9f5ff;
+      padding: 40px 20px;
+      text-align: center;
+      color: #007bff;
+      font-size: 18px;
+      cursor: pointer;
+      margin-bottom: 24px;
+      transition: background 0.2s;
+    }
+    .dropzone.dragover { background: #d0eaff; }
+    .file-list { margin-bottom: 24px; }
+    .file-list li { margin: 6px 0; }
+    .btn { background: #007bff; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    .btn:disabled { background: #aaa; }
+    .result { margin-top: 24px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Convert & Merge to PDF</h2>
+    <form id="uploadForm">
+      <div id="dropzone" class="dropzone">Drag & drop images, PDFs, or Excel files here<br>or click to select files</div>
+      <input type="file" id="fileInput" name="files" multiple style="display:none" accept=".jpg,.jpeg,.png,.bmp,.pdf,.xlsx">
+      <ul id="fileList" class="file-list"></ul>
+      <button type="submit" class="btn" id="convertBtn" disabled>Convert & Merge</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const convertBtn = document.getElementById('convertBtn');
+    const result = document.getElementById('result');
+    let files = [];
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+    function handleFiles(selectedFiles) {
+      for (const file of selectedFiles) {
+        if (!files.some(f => f.name === file.name && f.size === file.size)) {
+          files.push(file);
+        }
+      }
+      renderFileList();
+    }
+
+    function renderFileList() {
+      fileList.innerHTML = files.map(f => `<li>${f.name}</li>`).join('');
+      convertBtn.disabled = files.length === 0;
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      convertBtn.disabled = true;
+      result.textContent = 'Processing...';
+      const formData = new FormData();
+      files.forEach(f => formData.append('files', f));
+      try {
+        const res = await fetch('/convert', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          const link = document.createElement('a');
+          link.href = `data:application/pdf;base64,${data.data}`;
+          link.download = data.filename;
+          link.textContent = 'Download PDF';
+          result.innerHTML = '';
+          result.appendChild(link);
+        } else {
+          result.textContent = 'Conversion failed.';
+        }
+      } catch (err) {
+        result.textContent = 'Error: ' + err.message;
+      }
+      convertBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>
